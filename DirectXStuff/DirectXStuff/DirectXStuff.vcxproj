@@ -147,11 +147,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowsMessageMap.cpp" />
+    <ClCompile Include="WinException.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Window.h" />
     <ClInclude Include="WindowsMessageMap.h" />
+    <ClInclude Include="WinException.h" />
+    <ClInclude Include="WinInclude.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DirectXStuff.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="x0r6ztgiggle.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
