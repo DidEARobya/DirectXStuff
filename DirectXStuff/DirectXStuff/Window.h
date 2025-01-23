@@ -1,6 +1,8 @@
 #pragma once
 #include "WinInclude.h"
 #include "WinException.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 class Window
 {
@@ -16,7 +18,7 @@ public:
 		std::string GetErrorString() const noexcept;
 
 	private:
-		HRESULT hResult;
+		HRESULT _hResult;
 	};
 private:
 	class WindowClass
@@ -31,9 +33,11 @@ private:
 
 		WindowClass(const WindowClass&) = delete;
 		WindowClass& operator = (const WindowClass&) = delete;
-		static constexpr const char* windowClassName = "DirectX Window";
-		static WindowClass windowClass;
-		HINSTANCE hInstance;
+
+	private:
+		static constexpr const char* _windowClassName = "DirectX Window";
+		static WindowClass _windowClass;
+		HINSTANCE _hInstance;
 	};
 
 public:
@@ -42,14 +46,20 @@ public:
 
 	Window(const Window&) = delete;
 	Window& operator = (const Window&) = delete;
+
+	void SetTitle(const std::string& title);
 private:
 	static LRESULT CALLBACK HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK HandleMessageInvoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 
-	int width;
-	int height;
-	HWND hWnd;
+public:
+	Keyboard keyboard;
+	Mouse mouse;
+private:
+	int _width;
+	int _height;
+	HWND _hWnd;
 };
 
 //Exception Helper Macros
