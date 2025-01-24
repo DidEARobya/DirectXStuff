@@ -3,6 +3,9 @@
 #include "WinException.h"
 #include "Keyboard.h"
 #include "Mouse.h"
+#include "Graphics.h"
+#include <optional>
+#include <memory>
 
 class Window
 {
@@ -48,6 +51,8 @@ public:
 	Window& operator = (const Window&) = delete;
 
 	void SetTitle(const std::string& title);
+	static std::optional<int> ProcessMessages();
+	Graphics& GetGraphics();
 private:
 	static LRESULT CALLBACK HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK HandleMessageInvoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -56,10 +61,12 @@ private:
 public:
 	Keyboard keyboard;
 	Mouse mouse;
+
 private:
 	int _width;
 	int _height;
 	HWND _hWnd;
+	std::unique_ptr<Graphics> _graphics;
 };
 
 //Exception Helper Macros

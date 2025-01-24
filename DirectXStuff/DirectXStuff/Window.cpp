@@ -63,7 +63,10 @@ Window::Window(int width, int height, const char* name) : _width(width), _height
 		throw WINDOW_LAST_EXCEPT();
 	}
 
+	//Display Window
 	ShowWindow(_hWnd, SW_SHOWDEFAULT);
+	//Create Graphics Pointer
+	_graphics = std::make_unique<Graphics>(_hWnd);
 }
 
 Window::~Window()
@@ -79,6 +82,31 @@ void Window::SetTitle(const std::string& title)
 	}
 }
 
+std::optional<int> Window::ProcessMessages()
+{
+	MSG message;
+
+	while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE))
+	{
+		//Check for Quit Message, as PeekMessage does not signal this via return
+		if (message.message == WM_QUIT)
+		{
+			return message.wParam;
+		}
+
+		//TranslateMessage posts WM_CHAR messages, remove if not needed
+		TranslateMessage(&message);
+		DispatchMessage(&message);
+	}
+
+	//Return empty when not quitting
+	return {};
+}
+Graphics& Window::GetGraphics()
+{
+	return *_graphics;
+}
+//Handles messages until the window is fully created
 LRESULT WINAPI Window::HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg != WM_NCCREATE)
@@ -98,7 +126,7 @@ LRESULT WINAPI Window::HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LP
 	//Forward message to window class handler
 	return pWindow->HandleMessage(hWnd, msg, wParam, lParam);
 }
-
+//Invokes HandleMessage, handles messages post window creation
 LRESULT WINAPI Window::HandleMessageInvoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	Window* const pWindow = reinterpret_cast<Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
