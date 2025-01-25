@@ -70,17 +70,34 @@ void Graphics::DrawTestTriangle()
 {
 	struct Vertex
 	{
-		float x;
-		float y;
+		struct
+		{
+			float x;
+			float y;
+		} pos;
+
+		struct
+		{
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+			unsigned char a;
+		} colour;
+
 	};
 
 	//2D triangle at centre of screen
-	const Vertex vertices[] =
+	Vertex vertices[] =
 	{
-		{0.0f, 0.5f},
-		{0.5f, -0.5f},
-		{-0.5f, -0.5f},
+		{0.0f, 0.5f, 255, 0, 0, 0},
+		{0.5f, -0.5f, 0, 255, 0, 0},
+		{-0.5f, -0.5f, 0, 0, 255, 0},
+		{-0.3f, 0.3f, 0, 255, 0, 0},
+		{0.3f, 0.3f, 0, 0, 255, 0},
+		{0.0f, -0.8f, 255, 0, 0, 0},
 	};
+
+	vertices[0].colour.g = 255;
 
 	//Create buffer
 	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
@@ -104,6 +121,29 @@ void Graphics::DrawTestTriangle()
 	const UINT offset = 0u;
 	_pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
 
+	//Setup and bind index buffer
+	const unsigned short indices[] =
+	{
+		0, 1, 2,
+		0, 2, 3,
+		0, 4, 1,
+		2, 1, 5,
+	};
+
+	wrl::ComPtr<ID3D11Buffer> pIndexBuffer;
+	D3D11_BUFFER_DESC ibd = {};
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibd.Usage = D3D11_USAGE_DEFAULT;
+	ibd.CPUAccessFlags = 0u;
+	ibd.MiscFlags = 0u;
+	ibd.ByteWidth = sizeof(indices);
+	ibd.StructureByteStride = sizeof(unsigned short);
+	D3D11_SUBRESOURCE_DATA isd = {};
+	isd.pSysMem = indices;
+
+	GRAPHICS_THROW_INFO(_pDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer));
+	_pContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+
 	//Setup and bind pixel shader
 	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
 	wrl::ComPtr<ID3DBlob> pBlob;
@@ -122,6 +162,7 @@ void Graphics::DrawTestTriangle()
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOUR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	GRAPHICS_THROW_INFO(_pDevice->CreateInputLayout(ied, (UINT)std::size(ied), pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &pInputLayout));
 	_pContext->IASetInputLayout(pInputLayout.Get());
@@ -142,7 +183,7 @@ void Graphics::DrawTestTriangle()
 	viewport.TopLeftY = 0;
 	_pContext->RSSetViewports(1u, &viewport);
 
-	GRAPHICS_THROW_INFO_ONLY(_pContext->Draw((UINT)std::size(vertices), 0u));
+	GRAPHICS_THROW_INFO_ONLY(_pContext->DrawIndexed((UINT)std::size(indices), 0u, 0u));
 }
 
 #pragma region "GraphicsException"
