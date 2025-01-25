@@ -29,5 +29,6 @@ void App::Update()
 
 	const float cVal = sin(time) / 2.0f + 0.5f;
 	_window.GetGraphics().ClearBuffer(cVal, cVal, 1);
+	_window.GetGraphics().DrawTestTriangle();
 	_window.GetGraphics().EndFrame();
 }

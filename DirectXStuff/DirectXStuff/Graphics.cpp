@@ -1,8 +1,10 @@
 #include "Graphics.h"
-//#include "dxerr.h"
 #include <sstream>
+#include <d3dcompiler.h>
 
 namespace wrl = Microsoft::WRL;
+
+#pragma comment(lib, "D3DCompiler.lib")
 
 Graphics::Graphics(HWND hWnd)
 {
@@ -64,7 +66,86 @@ void Graphics::ClearBuffer(float r, float g, float b) noexcept
 	_pContext->ClearRenderTargetView(_pTarget.Get(), colour);
 }
 
-#pragma region "Exception"
+void Graphics::DrawTestTriangle()
+{
+	struct Vertex
+	{
+		float x;
+		float y;
+	};
+
+	//2D triangle at centre of screen
+	const Vertex vertices[] =
+	{
+		{0.0f, 0.5f},
+		{0.5f, -0.5f},
+		{-0.5f, -0.5f},
+	};
+
+	//Create buffer
+	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
+
+	D3D11_BUFFER_DESC bufferDescriptor = {};
+	bufferDescriptor.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDescriptor.Usage = D3D11_USAGE_DEFAULT;
+	bufferDescriptor.CPUAccessFlags = 0u;
+	bufferDescriptor.MiscFlags = 0u;
+	bufferDescriptor.ByteWidth = sizeof(vertices);
+	bufferDescriptor.StructureByteStride = sizeof(Vertex);
+
+	D3D11_SUBRESOURCE_DATA subData = {};
+	subData.pSysMem = vertices;
+
+	HRESULT hResult;
+	GRAPHICS_THROW_INFO(_pDevice->CreateBuffer(&bufferDescriptor, &subData, &pVertexBuffer));
+
+	//Bind vertex buffer to pipeline
+	const UINT stride = sizeof(Vertex);
+	const UINT offset = 0u;
+	_pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
+
+	//Setup and bind pixel shader
+	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
+	wrl::ComPtr<ID3DBlob> pBlob;
+	GRAPHICS_THROW_INFO(D3DReadFileToBlob(L"PixelShader.cso", &pBlob));
+	GRAPHICS_THROW_INFO(_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pPixelShader));
+	_pContext->PSSetShader(pPixelShader.Get(), nullptr, 0u);
+
+	//Setup and bind vertex shader
+	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
+	GRAPHICS_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &pBlob));
+	GRAPHICS_THROW_INFO(_pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pVertexShader));
+	_pContext->VSSetShader(pVertexShader.Get(), nullptr, 0u);
+
+	//Input (vertex) layout (2D)
+	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
+	const D3D11_INPUT_ELEMENT_DESC ied[] =
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+	GRAPHICS_THROW_INFO(_pDevice->CreateInputLayout(ied, (UINT)std::size(ied), pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &pInputLayout));
+	_pContext->IASetInputLayout(pInputLayout.Get());
+
+	//Render target setup
+	_pContext->OMSetRenderTargets(1u, _pTarget.GetAddressOf(), nullptr);
+
+	//Set primitive topology 
+	_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//Setup viewport
+	D3D11_VIEWPORT viewport;
+	viewport.Width = 800;
+	viewport.Height = 600;
+	viewport.MinDepth = 0;
+	viewport.MaxDepth = 1;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	_pContext->RSSetViewports(1u, &viewport);
+
+	GRAPHICS_THROW_INFO_ONLY(_pContext->Draw((UINT)std::size(vertices), 0u));
+}
+
+#pragma region "GraphicsException"
 Graphics::GraphicsException::GraphicsException(int line, const char* file, HRESULT hResult, std::vector<std::string> exceptionInfo) noexcept : Exception(line, file), _hResult(hResult)
 {
 	for (const auto& message : exceptionInfo)
@@ -83,7 +164,6 @@ const char* Graphics::GraphicsException::what() const noexcept
 	std::ostringstream oss;
 	oss << GetType() << std::endl
 		<< "[Error Code] " << std::hex << std::uppercase << GetErrorCode() << std::dec << " (" << (unsigned long)GetErrorCode() << ")" << std::endl
-		//<< "[Error String ]" << GetErrorString() << std::endl
 		<< "[Description] " << GetErrorDescription() << std::endl;
 
 	if (_info.empty() == false)
@@ -116,7 +196,6 @@ std::string Graphics::GraphicsException::TranslateErrorCode(HRESULT hResult) noe
 	std::string errorString = pMessageBuffer;
 	LocalFree(pMessageBuffer);
 	return errorString;
-	//return DXGetErrorString(_hResult);
 }
 
 HRESULT Graphics::GraphicsException::GetErrorCode() const noexcept
@@ -126,8 +205,6 @@ HRESULT Graphics::GraphicsException::GetErrorCode() const noexcept
 
 std::string Graphics::GraphicsException::GetErrorDescription() const noexcept
 {
-	//char buffer[512];
-	//DXGetErrorDescription(_hResult, buffer, sizeof(buffer));
 	return TranslateErrorCode(_hResult);
 }
 
@@ -141,3 +218,41 @@ const char* Graphics::DeviceRemovedException::GetType() const noexcept
 	return "Device Removed Exception";
 }
 #pragma endregion
+
+#pragma region "InfoException"
+Graphics::InfoException::InfoException(int line, const char* file, std::vector<std::string> info) noexcept : Exception(line, file)
+{
+	for (const auto& message : info)
+	{
+		_info += message;
+		_info.push_back('\n');
+	}
+
+	if (_info.empty() == false)
+	{
+		_info.pop_back();
+	}
+}
+
+const char* Graphics::InfoException::what() const noexcept
+{
+	std::ostringstream oss;
+	oss << GetType() << std::endl
+		<< "\n[Error Info]\n" << GetErrorInfo() << std::endl << std::endl;
+	oss << GetOriginString();
+
+	whatBuffer = oss.str();
+	return whatBuffer.c_str();
+}
+
+const char* Graphics::InfoException::GetType() const noexcept
+{
+	return "Graphics Info Exception";
+}
+
+std::string Graphics::InfoException::GetErrorInfo() const noexcept
+{
+	return _info;
+}
+#pragma endregion
+
