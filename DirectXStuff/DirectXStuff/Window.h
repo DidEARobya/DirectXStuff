@@ -12,16 +12,28 @@ class Window
 public:
 	class Exception : public WinException
 	{
+		using WinException::WinException;
+
 	public:
-		Exception(int line, const char* file, HRESULT hResult) noexcept;
+		static std::string TranslateErrorCode(HRESULT hResult) noexcept;
+	};
+	class WindowException : public Exception
+	{
+	public:
+		WindowException(int line, const char* file, HRESULT hResult) noexcept;
 		const char* what() const noexcept override;
 		virtual const char* GetType() const noexcept override;
-		static std::string TranslateErrorCode(HRESULT hResult) noexcept;
 		HRESULT GetErrorCode() const noexcept;
-		std::string GetErrorString() const noexcept;
+		std::string GetErrorDescription() const noexcept;
 
 	private:
 		HRESULT _hResult;
+	};
+	class NoGraphicsException : public Exception
+	{
+	public:
+		using Exception::Exception;
+		const char* GetType() const noexcept override;
 	};
 private:
 	class WindowClass
@@ -61,7 +73,6 @@ private:
 public:
 	Keyboard keyboard;
 	Mouse mouse;
-
 private:
 	int _width;
 	int _height;
@@ -70,5 +81,6 @@ private:
 };
 
 //Exception Helper Macros
-#define WINDOW_EXCEPT(hResult) Window::Exception(__LINE__, __FILE__, hResult)
-#define WINDOW_LAST_EXCEPT() Window::Exception(__LINE__, __FILE__, GetLastError())
+#define WINDOW_EXCEPT(hResult) Window::WindowException(__LINE__, __FILE__, hResult)
+#define WINDOW_LAST_EXCEPT() Window::WindowException(__LINE__, __FILE__, GetLastError())
+#define WINDOW_NO_GRAPHICS_EXCEPTION() Window::NoGraphicsException(__LINE__,__FILE__)
