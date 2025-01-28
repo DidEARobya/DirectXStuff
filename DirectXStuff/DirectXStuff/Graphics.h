@@ -5,11 +5,15 @@
 #include <wrl.h>
 #include <vector>
 #include "DXGIInfoManager.h"
-
-#pragma comment(lib, "d3d11.lib")
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <memory>
+#include <random>
+#include <string>
 
 class Graphics
 {
+	friend class Bindable;
 public:
 	class Exception : public WinException
 	{
@@ -54,9 +58,12 @@ public:
 
 	void EndFrame();
 	void ClearBuffer(float r, float g, float b) noexcept;
-	void DrawTestTriangle();
+	void DrawIndexed(UINT count) noexcept(!IS_DEBUG);
+	void SetProjection(DirectX::FXMMATRIX projection) noexcept;
+	DirectX::XMMATRIX GetProjection() const noexcept;
 
 private:
+	DirectX::XMMATRIX _projection;
 #if defined(_DEBUG)
 	DXGIInfoManager _infoManager;
 #endif
@@ -64,20 +71,5 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> _pSwapChain = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> _pContext = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> _pTarget = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> _pDepthView = nullptr;
 };
-
-//Exception Helper Macros
-#define GRAPHICS_THROW_FAILED(hrcall) if(FAILED(hResult = (hrcall))) throw Graphics::GraphicsException(__LINE__, __FILE__, hResult)
-#define GRAPHICS_DEVICE_REMOVED_EXCEPT(hResult) Graphics::DeviceRemovedException(__LINE__, __FILE__, hResult)
-
-#if defined(_DEBUG)
-#define GRAPHICS_EXCEPT(hResult) Graphics::GraphicsException( __LINE__,__FILE__,(hResult),_infoManager.GetMessages() )
-#define GRAPHICS_THROW_INFO(hrcall) _infoManager.Set(); if( FAILED( hResult = (hrcall))) throw GRAPHICS_EXCEPT(hResult)
-#define GRAPHICS_DEVICE_REMOVED_EXCEPT(hResult) Graphics::DeviceRemovedException( __LINE__,__FILE__,(hResult),_infoManager.GetMessages() )
-#define GRAPHICS_THROW_INFO_ONLY(call) _infoManager.Set(); (call); {auto messages = _infoManager.GetMessages(); if(!messages.empty()) {throw Graphics::InfoException(__LINE__,__FILE__, messages);}}
-#else
-#define GRAPHICS_EXCEPT(hResult) Graphics::GraphicsException( __LINE__,__FILE__,(hResult))
-#define GRAPHICS_THROW_INFO(hrcall) GRAPHICS_THROW_NOINFO(hrcall)
-#define GRAPHICS_DEVICE_REMOVED_EXCEPT(hResult) Graphics::DeviceRemovedException( __LINE__,__FILE__,(hResult) )
-#define GRAPHICS_THROW_INFO_ONLY(call) (call)
-#endif
