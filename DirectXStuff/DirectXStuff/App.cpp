@@ -9,6 +9,9 @@
 #include "WinMath.h"
 #include "Surface.h"
 #include "GDIPlusManager.h"
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_win32.h"
+#include "imgui/backends/imgui_impl_dx11.h"
 
 GDIPlusManager gdipManager;
 
@@ -87,6 +90,19 @@ void App::Update()
 		cube->Update(deltaTime);
 		cube->Draw(_window.GetGraphics());
 	}
+
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	static bool show_demo_window = true;
+	if (show_demo_window)
+	{
+		ImGui::ShowDemoWindow(&show_demo_window);
+	}
+
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 	_window.GetGraphics().EndFrame();
 }

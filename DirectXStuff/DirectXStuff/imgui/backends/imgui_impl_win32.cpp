@@ -74,23 +74,12 @@
 //  2017-10-23: Inputs: Using Win32 ::SetCapture/::GetCapture() to retrieve mouse positions outside the client area when dragging.
 //  2016-11-12: Inputs: Only call Win32 ::SetCursor(nullptr) when io.MouseDrawCursor is set.
 
-#include "imgui.h"
+#include "../imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_impl_win32.h"
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
 #include <windowsx.h> // GET_X_LPARAM(), GET_Y_LPARAM()
 #include <tchar.h>
 #include <dwmapi.h>
-
-// Using XInput for gamepad (will load DLL dynamically)
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-#include <xinput.h>
-typedef DWORD(WINAPI* PFN_XInputGetCapabilities)(DWORD, DWORD, XINPUT_CAPABILITIES*);
-typedef DWORD(WINAPI* PFN_XInputGetState)(DWORD, XINPUT_STATE*);
-#endif
 
 // Clang/GCC warnings with -Weverything
 #if defined(__clang__)
@@ -118,8 +107,6 @@ struct ImGui_ImplWin32_Data
     bool                        HasGamepad;
     bool                        WantUpdateHasGamepad;
     HMODULE                     XInputDLL;
-    PFN_XInputGetCapabilities   XInputGetCapabilities;
-    PFN_XInputGetState          XInputGetState;
 #endif
 
     ImGui_ImplWin32_Data()      { memset((void*)this, 0, sizeof(*this)); }
@@ -179,31 +166,10 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
     main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (void*)bd->hWnd;
     IM_UNUSED(platform_has_own_dc); // Used in 'docking' branch
 
-    // Dynamically load XInput library
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-    bd->WantUpdateHasGamepad = true;
-    const char* xinput_dll_names[] =
-    {
-        "xinput1_4.dll",   // Windows 8+
-        "xinput1_3.dll",   // DirectX SDK
-        "xinput9_1_0.dll", // Windows Vista, Windows 7
-        "xinput1_2.dll",   // DirectX SDK
-        "xinput1_1.dll"    // DirectX SDK
-    };
-    for (int n = 0; n < IM_ARRAYSIZE(xinput_dll_names); n++)
-        if (HMODULE dll = ::LoadLibraryA(xinput_dll_names[n]))
-        {
-            bd->XInputDLL = dll;
-            bd->XInputGetCapabilities = (PFN_XInputGetCapabilities)::GetProcAddress(dll, "XInputGetCapabilities");
-            bd->XInputGetState = (PFN_XInputGetState)::GetProcAddress(dll, "XInputGetState");
-            break;
-        }
-#endif // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-
     return true;
 }
 
-IMGUI_IMPL_API bool     ImGui_ImplWin32_Init(void* hwnd)
+IMGUI_IMPL_API bool     ImGui_ImplWin32_Init(HWND hwnd)
 {
     return ImGui_ImplWin32_InitEx(hwnd, false);
 }
@@ -326,64 +292,6 @@ static void ImGui_ImplWin32_UpdateMouseData(ImGuiIO& io)
     }
 }
 
-// Gamepad navigation mapping
-static void ImGui_ImplWin32_UpdateGamepads(ImGuiIO& io)
-{
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-    ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData(io);
-    //if ((io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) == 0) // FIXME: Technically feeding gamepad shouldn't depend on this now that they are regular inputs.
-    //    return;
-
-    // Calling XInputGetState() every frame on disconnected gamepads is unfortunately too slow.
-    // Instead we refresh gamepad availability by calling XInputGetCapabilities() _only_ after receiving WM_DEVICECHANGE.
-    if (bd->WantUpdateHasGamepad)
-    {
-        XINPUT_CAPABILITIES caps = {};
-        bd->HasGamepad = bd->XInputGetCapabilities ? (bd->XInputGetCapabilities(0, XINPUT_FLAG_GAMEPAD, &caps) == ERROR_SUCCESS) : false;
-        bd->WantUpdateHasGamepad = false;
-    }
-
-    io.BackendFlags &= ~ImGuiBackendFlags_HasGamepad;
-    XINPUT_STATE xinput_state;
-    XINPUT_GAMEPAD& gamepad = xinput_state.Gamepad;
-    if (!bd->HasGamepad || bd->XInputGetState == nullptr || bd->XInputGetState(0, &xinput_state) != ERROR_SUCCESS)
-        return;
-    io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
-
-    #define IM_SATURATE(V)                      (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
-    #define MAP_BUTTON(KEY_NO, BUTTON_ENUM)     { io.AddKeyEvent(KEY_NO, (gamepad.wButtons & BUTTON_ENUM) != 0); }
-    #define MAP_ANALOG(KEY_NO, VALUE, V0, V1)   { float vn = (float)(VALUE - V0) / (float)(V1 - V0); io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); }
-    MAP_BUTTON(ImGuiKey_GamepadStart,           XINPUT_GAMEPAD_START);
-    MAP_BUTTON(ImGuiKey_GamepadBack,            XINPUT_GAMEPAD_BACK);
-    MAP_BUTTON(ImGuiKey_GamepadFaceLeft,        XINPUT_GAMEPAD_X);
-    MAP_BUTTON(ImGuiKey_GamepadFaceRight,       XINPUT_GAMEPAD_B);
-    MAP_BUTTON(ImGuiKey_GamepadFaceUp,          XINPUT_GAMEPAD_Y);
-    MAP_BUTTON(ImGuiKey_GamepadFaceDown,        XINPUT_GAMEPAD_A);
-    MAP_BUTTON(ImGuiKey_GamepadDpadLeft,        XINPUT_GAMEPAD_DPAD_LEFT);
-    MAP_BUTTON(ImGuiKey_GamepadDpadRight,       XINPUT_GAMEPAD_DPAD_RIGHT);
-    MAP_BUTTON(ImGuiKey_GamepadDpadUp,          XINPUT_GAMEPAD_DPAD_UP);
-    MAP_BUTTON(ImGuiKey_GamepadDpadDown,        XINPUT_GAMEPAD_DPAD_DOWN);
-    MAP_BUTTON(ImGuiKey_GamepadL1,              XINPUT_GAMEPAD_LEFT_SHOULDER);
-    MAP_BUTTON(ImGuiKey_GamepadR1,              XINPUT_GAMEPAD_RIGHT_SHOULDER);
-    MAP_ANALOG(ImGuiKey_GamepadL2,              gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
-    MAP_ANALOG(ImGuiKey_GamepadR2,              gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
-    MAP_BUTTON(ImGuiKey_GamepadL3,              XINPUT_GAMEPAD_LEFT_THUMB);
-    MAP_BUTTON(ImGuiKey_GamepadR3,              XINPUT_GAMEPAD_RIGHT_THUMB);
-    MAP_ANALOG(ImGuiKey_GamepadLStickLeft,      gamepad.sThumbLX, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    MAP_ANALOG(ImGuiKey_GamepadLStickRight,     gamepad.sThumbLX, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadLStickUp,        gamepad.sThumbLY, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadLStickDown,      gamepad.sThumbLY, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    MAP_ANALOG(ImGuiKey_GamepadRStickLeft,      gamepad.sThumbRX, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    MAP_ANALOG(ImGuiKey_GamepadRStickRight,     gamepad.sThumbRX, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadRStickUp,        gamepad.sThumbRY, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadRStickDown,      gamepad.sThumbRY, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    #undef MAP_BUTTON
-    #undef MAP_ANALOG
-#else // #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-    IM_UNUSED(io);
-#endif
-}
-
 void    ImGui_ImplWin32_NewFrame()
 {
     ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
@@ -414,12 +322,8 @@ void    ImGui_ImplWin32_NewFrame()
         bd->LastMouseCursor = mouse_cursor;
         ImGui_ImplWin32_UpdateMouseCursor(io, mouse_cursor);
     }
-
-    // Update game controllers (if enabled and available)
-    ImGui_ImplWin32_UpdateGamepads(io);
 }
 
-// Map VK_xxx to ImGuiKey_xxx.
 // Not static to allow third-party code to use that if they want to (but undocumented)
 ImGuiKey ImGui_ImplWin32_KeyEventToImGuiKey(WPARAM wParam, LPARAM lParam);
 ImGuiKey ImGui_ImplWin32_KeyEventToImGuiKey(WPARAM wParam, LPARAM lParam)

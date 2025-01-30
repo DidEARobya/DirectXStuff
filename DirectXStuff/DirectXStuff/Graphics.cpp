@@ -1,6 +1,7 @@
 #include "Graphics.h"
 #include <sstream>
 #include "GraphicsMacros.h"
+#include "imgui/backends/imgui_impl_dx11.h"
 
 namespace wrl = Microsoft::WRL;
 namespace dirx = DirectX;
@@ -85,6 +86,14 @@ Graphics::Graphics(HWND hWnd)
 	viewport.TopLeftY = 0;
 
 	_pContext->RSSetViewports(1u, &viewport);
+
+	//Init imgui d3d 
+	ImGui_ImplDX11_Init(_pDevice.Get(), _pContext.Get());
+}
+
+Graphics::~Graphics()
+{
+	ImGui_ImplDX11_Shutdown();
 }
 
 void Graphics::EndFrame()

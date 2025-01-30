@@ -1,6 +1,9 @@
 #include "Window.h"
 #include <sstream>
 #include "resource.h"
+#include "imgui/backends/imgui_impl_win32.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #pragma region "WindowClass"
 Window::WindowClass Window::WindowClass::_windowClass;
@@ -65,12 +68,15 @@ Window::Window(int width, int height, const char* name) : _width(width), _height
 
 	//Display Window
 	ShowWindow(_hWnd, SW_SHOWDEFAULT);
+	//Init ImGui Win32 Impl, have to move if using multiple windows
+	ImGui_ImplWin32_Init(_hWnd);
 	//Create Graphics Pointer
 	_graphics = std::make_unique<Graphics>(_hWnd);
 }
 
 Window::~Window()
 {
+	ImGui_ImplWin32_Shutdown();
 	DestroyWindow(_hWnd);
 }
 
@@ -139,6 +145,11 @@ LRESULT WINAPI Window::HandleMessageInvoke(HWND hWnd, UINT msg, WPARAM wParam, L
 
 LRESULT Window::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+	{
+		return true;
+	}
+
 	switch (msg)
 	{
 		//----WINDOW STATES----

@@ -15,13 +15,10 @@
 // - Introduction, links and more at the top of imgui.cpp
 
 #pragma once
-#include "imgui.h"      // IMGUI_IMPL_API
+#include "../../WinInclude.h"
+#include "../../Graphics.h"
+#include "../imgui.h"      // IMGUI_IMPL_API
 #ifndef IMGUI_DISABLE
-
-struct ID3D11Device;
-struct ID3D11DeviceContext;
-struct ID3D11SamplerState;
-struct ID3D11Buffer;
 
 // Follow "Getting Started" link and check examples/ folder to learn about using backends!
 IMGUI_IMPL_API bool     ImGui_ImplDX11_Init(ID3D11Device* device, ID3D11DeviceContext* device_context);
