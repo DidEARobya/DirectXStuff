@@ -10,8 +10,6 @@
 #include "Surface.h"
 #include "GDIPlusManager.h"
 #include "imgui/imgui.h"
-#include "imgui/backends/imgui_impl_win32.h"
-#include "imgui/backends/imgui_impl_dx11.h"
 
 GDIPlusManager gdipManager;
 
@@ -82,27 +80,30 @@ int App::StartApp()
 //Executes frame logic
 void App::Update()
 {
-	auto deltaTime = _timer.Mark();
-	_window.GetGraphics().ClearBuffer(0.07f, 0.0f, 0.12f);
+	const auto deltaTime = _timer.Mark() * _speedFactor;
+	_window.GetGraphics().BeginFrame(0.07f, 0.0f, 0.12f);
+	_window.GetGraphics().SetCamera(_camera.GetMatrix());
+
+	const bool _isSpacePressed = _window.keyboard.IsKeyPressed(VK_SPACE);
 
 	for (auto& cube : _drawables)
 	{
-		cube->Update(deltaTime);
+		cube->Update(_isSpacePressed ? 0.0f : deltaTime);
 		cube->Draw(_window.GetGraphics());
 	}
 
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
+	static char buffer[1024];
 
-	static bool show_demo_window = true;
-	if (show_demo_window)
+	if (ImGui::Begin("Simulation Speed"))
 	{
-		ImGui::ShowDemoWindow(&show_demo_window);
+		ImGui::SliderFloat("Speed Factor", &_speedFactor, 0.0f, 4.0f);
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Text("Status: %s", _isSpacePressed ? "PAUSED" : "RUNNING (hold spacebar to pause)");
 	}
 
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	ImGui::End();
+
+	_camera.SpawnControlWindow();
 
 	_window.GetGraphics().EndFrame();
 }

@@ -147,9 +147,6 @@
     <ClCompile Include="Sheet.cpp">
       <Filter>Source Files\Graphics\Drawable</Filter>
     </ClCompile>
-    <ClCompile Include="TexturedBox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
@@ -172,6 +169,12 @@
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="ImGuiManager.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="TexturedBox.cpp">
+      <Filter>Source Files\Graphics\Drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
@@ -296,9 +299,6 @@
     <ClInclude Include="Sheet.h">
       <Filter>Header Files\Graphics\Drawable</Filter>
     </ClInclude>
-    <ClInclude Include="TexturedBox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
@@ -324,6 +324,12 @@
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="ImGuiManager.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="TexturedBox.h">
+      <Filter>Header Files\Graphics\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>

@@ -89,7 +89,7 @@ void Keyboard::OnKeyPressed(unsigned char keycode) noexcept
 
 void Keyboard::OnKeyReleased(unsigned char keycode) noexcept
 {
-	_keystates[keycode] = true;
+	_keystates[keycode] = false;
 	_keybuffer.push(Keyboard::Event(Keyboard::Event::Type::Released, keycode));
 	TrimBuffer(_keybuffer);
 }

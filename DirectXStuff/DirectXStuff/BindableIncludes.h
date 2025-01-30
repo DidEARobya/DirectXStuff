@@ -8,3 +8,6 @@
 #include "VertexBuffer.h"
 #include "VertexShader.h"
 #include "InputLayout.h"
+#include "Surface.h"
+#include "Texture.h"
+#include "Sampler.h"

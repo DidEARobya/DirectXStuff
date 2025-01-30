@@ -81,6 +81,5 @@ DirectX::XMMATRIX Melon::GetTransformMatrix() const noexcept
 {
 	return dirx::XMMatrixRotationRollPitchYaw(_pitch, _yaw, _roll) *
 		dirx::XMMatrixTranslation(_r, 0.0f, 0.0f) *
-		dirx::XMMatrixRotationRollPitchYaw(_theta, _phi, _chi) *
-		dirx::XMMatrixTranslation(0.0f, 0.0f, 20.0f);
+		dirx::XMMatrixRotationRollPitchYaw(_theta, _phi, _chi);
 }

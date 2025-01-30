@@ -56,14 +56,24 @@ public:
 	Graphics& operator= (const Graphics&) = delete;
 	~Graphics();
 
+	void BeginFrame(float r, float g, float b) noexcept;
 	void EndFrame();
-	void ClearBuffer(float r, float g, float b) noexcept;
 	void DrawIndexed(UINT count) noexcept(!IS_DEBUG);
 	void SetProjection(DirectX::FXMMATRIX projection) noexcept;
 	DirectX::XMMATRIX GetProjection() const noexcept;
 
+	void SetCamera(DirectX::FXMMATRIX camera) noexcept;
+	DirectX::XMMATRIX GetCamera() const noexcept;
+
+	void EnableImGui() noexcept;
+	void DisableImGui() noexcept;
+	bool IsImGuiEnabled() const noexcept;	
 private:
 	DirectX::XMMATRIX _projection;
+	DirectX::XMMATRIX _camera;
+
+	bool _isImGuiEnabled = true;
+
 #if defined(_DEBUG)
 	DXGIInfoManager _infoManager;
 #endif

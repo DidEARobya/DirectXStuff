@@ -166,7 +166,13 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		//----KEYBOARD MESSAGES----
 		case WM_KEYDOWN:
+		case WM_SYSKEYDOWN:
 		{
+			if (ImGui::GetIO().WantCaptureKeyboard == true)
+			{
+				break;
+			}
+
 			if ((lParam & 0x40000000) == false || keyboard.IsAutoRepeateEnabled() == true)
 			{
 				keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
@@ -174,25 +180,23 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case WM_KEYUP:
-		{
-			keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
-			break;
-		}
-		case WM_SYSKEYDOWN:
-		{
-			if ((lParam & 0x40000000) == false || keyboard.IsAutoRepeateEnabled() == true)
-			{
-				keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
-			}
-			break;
-		}
 		case WM_SYSKEYUP:
 		{
+			if (ImGui::GetIO().WantCaptureKeyboard == true)
+			{
+				break;
+			}
+
 			keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
 			break;
 		}
 		case WM_CHAR:
 		{
+			if (ImGui::GetIO().WantCaptureKeyboard == true)
+			{
+				break;
+			}
+
 			keyboard.OnChar(static_cast<unsigned char>(wParam));
 			break;
 		}
@@ -200,6 +204,11 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//----MOUSE MESSAGES----
 		case WM_MOUSEMOVE:
 		{
+			if (ImGui::GetIO().WantCaptureMouse == true)
+			{
+				break;
+			}
+
 			const POINTS pt = MAKEPOINTS(lParam);
 
 			if (pt.x >= 0 && pt.x < _width && pt.y >= 0 && pt.y < _height)

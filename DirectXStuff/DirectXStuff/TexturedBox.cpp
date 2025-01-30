@@ -2,8 +2,6 @@
 #include "BindableIncludes.h"
 #include "GraphicsMacros.h"
 #include "Cube.h"
-#include "Surface.h"
-#include "Texture.h"
 
 namespace dirx = DirectX;
 
@@ -27,6 +25,8 @@ TexturedBox::TexturedBox(Graphics& graphics,std::mt19937& rng,std::uniform_real_
 		AddStaticBind(std::make_unique<VertexBuffer>(graphics, model._vertices));
 
 		AddStaticBind(std::make_unique<Texture>(graphics, Surface::FromFile("Images\\cube.png")));
+
+		//AddStaticBind(std::make_unique<Sampler>(graphics));
 
 		auto pVertexShader = std::make_unique<VertexShader>(graphics, L"TextureVS.cso");
 		auto pVSByteCode = pVertexShader->GetByteCode();
@@ -67,6 +67,5 @@ DirectX::XMMATRIX TexturedBox::GetTransformMatrix() const noexcept
 {
 	return dirx::XMMatrixRotationRollPitchYaw(_pitch, _yaw,_roll) *
 		dirx::XMMatrixTranslation(_r, 0.0f, 0.0f) *
-		dirx::XMMatrixRotationRollPitchYaw(_theta, _phi, _chi) *
-		dirx::XMMatrixTranslation(0.0f, 0.0f, 20.0f);
+		dirx::XMMatrixRotationRollPitchYaw(_theta, _phi, _chi);
 }

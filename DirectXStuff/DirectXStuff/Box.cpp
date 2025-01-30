@@ -87,6 +87,5 @@ DirectX::XMMATRIX Box::GetTransformMatrix() const noexcept
 	return dirx::XMLoadFloat3x3(&_modelTransform) *
 		dirx::XMMatrixRotationRollPitchYaw(_pitch, _yaw, _roll) *
 		dirx::XMMatrixTranslation(_r, 0.0f, 0.0f) *
-		dirx::XMMatrixRotationRollPitchYaw(_theta, _phi, _chi) *
-		dirx::XMMatrixTranslation(0.0f, 0.0f, 20.0f);
+		dirx::XMMatrixRotationRollPitchYaw(_theta, _phi, _chi);
 }

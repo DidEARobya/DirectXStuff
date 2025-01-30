@@ -2,6 +2,7 @@
 #include <sstream>
 #include "GraphicsMacros.h"
 #include "imgui/backends/imgui_impl_dx11.h"
+#include "imgui/backends/imgui_impl_win32.h"
 
 namespace wrl = Microsoft::WRL;
 namespace dirx = DirectX;
@@ -96,8 +97,28 @@ Graphics::~Graphics()
 	ImGui_ImplDX11_Shutdown();
 }
 
+void Graphics::BeginFrame(float r, float g, float b) noexcept
+{
+	if (_isImGuiEnabled == true)
+	{
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	const float colour[] = { r, g, b, 1.0f };
+	_pContext->ClearRenderTargetView(_pTarget.Get(), colour);
+	_pContext->ClearDepthStencilView(_pDepthView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
+}
+
 void Graphics::EndFrame()
 {
+	if (_isImGuiEnabled == true)
+	{
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	}
+
 	HRESULT hResult;
 
 #if defined (_DEBUG)
@@ -116,13 +137,6 @@ void Graphics::EndFrame()
 	}
 }
 
-void Graphics::ClearBuffer(float r, float g, float b) noexcept
-{
-	const float colour[] = { r, g, b, 1.0f };
-	_pContext->ClearRenderTargetView(_pTarget.Get(), colour);
-	_pContext->ClearDepthStencilView(_pDepthView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
-}
-
 void Graphics::DrawIndexed(UINT count) noexcept(!IS_DEBUG)
 {
 	GRAPHICS_THROW_INFO_ONLY(_pContext->DrawIndexed(count, 0u, 0u));
@@ -135,6 +149,26 @@ void Graphics::SetProjection(DirectX::FXMMATRIX projection) noexcept
 DirectX::XMMATRIX Graphics::GetProjection() const noexcept
 {
 	return _projection;
+}
+void Graphics::SetCamera(DirectX::FXMMATRIX camera) noexcept
+{
+	_camera = camera;
+}
+DirectX::XMMATRIX Graphics::GetCamera() const noexcept
+{
+	return _camera;
+}
+void Graphics::EnableImGui() noexcept
+{
+	_isImGuiEnabled = true;
+}
+void Graphics::DisableImGui() noexcept
+{
+	_isImGuiEnabled = false;
+}
+bool Graphics::IsImGuiEnabled() const noexcept
+{
+	return _isImGuiEnabled;
 }
 #pragma region "GraphicsException"
 Graphics::GraphicsException::GraphicsException(int line, const char* file, HRESULT hResult, std::vector<std::string> exceptionInfo) noexcept : Exception(line, file), _hResult(hResult)
