@@ -9,7 +9,7 @@ Melon::Melon(Graphics& graphics, std::mt19937& rng, std::uniform_real_distributi
 	: 
 	_r(rdist(rng)),_droll(ddist(rng)),_dpitch(ddist(rng)),_dyaw(ddist(rng)),_dphi(odist(rng)),_dtheta(odist(rng)),_dchi(odist(rng)),_chi(adist(rng)),_theta(adist(rng)),_phi(adist(rng))
 {
-	if (IsStaticInitilised() == false)
+	if (IsStaticInitialised() == false)
 	{
 		auto pVertexShader = std::make_unique<VertexShader>(graphics, L"ColourIndexVS.cso");
 		auto pvsbc = pVertexShader->GetByteCode();

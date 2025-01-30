@@ -2,19 +2,22 @@
 #include "Box.h"
 #include "Melon.h"
 #include "Pyramid.h"
+#include "Sheet.h"
+#include "TexturedBox.h"
 #include <memory>
 #include <algorithm>
 #include "WinMath.h"
+#include "Surface.h"
+#include "GDIPlusManager.h"
+
+GDIPlusManager gdipManager;
 
 App::App() : _window(800, 600, "Main App")
 {
 	class Factory
 	{
 	public:
-		Factory(Graphics& graphics) : _graphics(graphics)
-		{
-
-		}
+		Factory(Graphics& graphics) : _graphics(graphics) {}
 
 		std::unique_ptr<Drawable> operator()()
 		{
@@ -26,6 +29,10 @@ App::App() : _window(800, 600, "Main App")
 				return std::make_unique<Box>(_graphics, _rng, _adist, _ddist, _odist, _rdist, _bdist);
 			case 2:
 				return std::make_unique<Melon>(_graphics, _rng, _adist, _ddist, _odist, _rdist, _longdist, _latdist);
+			case 3:
+				return std::make_unique<Sheet>(_graphics, _rng, _adist, _ddist, _odist, _rdist);
+			case 4:
+				return std::make_unique<TexturedBox>(_graphics, _rng, _adist, _ddist, _odist, _rdist);
 			default:
 				assert(false && "Bad drawable type in factory");
 				return {};
@@ -42,7 +49,7 @@ App::App() : _window(800, 600, "Main App")
 		std::uniform_real_distribution<float> _bdist{ 0.4f, 3.0f };
 		std::uniform_int_distribution<int> _latdist{ 5, 20 };
 		std::uniform_int_distribution<int> _longdist{ 10, 40 };
-		std::uniform_int_distribution<int> _typedist{ 0, 2 };
+		std::uniform_int_distribution<int> _typedist{ 0, 4 };
 	};
 
 	Factory factory(_window.GetGraphics());

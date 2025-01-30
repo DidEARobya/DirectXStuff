@@ -3,6 +3,7 @@
 #include <vector>
 #include <array>
 #include "IndexedTriangleList.h"
+#include "WinMath.h"
 
 class Plane
 {
