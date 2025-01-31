@@ -20,7 +20,7 @@ public:
 		GetContext(graphics)->Unmap(pConstantBuffer.Get(), 0u);
 	}
 
-	ConstantBuffer(Graphics& graphics, const C& consts)
+	ConstantBuffer(Graphics& graphics, const C& consts, UINT slot = 0u) : slot(slot)
 	{
 		GRAPHICSINFO(graphics);
 
@@ -38,7 +38,7 @@ public:
 		GRAPHICS_THROW_INFO(GetDevice(graphics)->CreateBuffer(&cbd, &csd, &pConstantBuffer));
 	}
 
-	ConstantBuffer(Graphics& graphics)
+	ConstantBuffer(Graphics& graphics, UINT slot = 0u) : slot(slot)
 	{
 		GRAPHICSINFO(graphics);
 
@@ -55,12 +55,14 @@ public:
 
 protected:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;
+	UINT slot = 0u;
 };
 
 template<typename C>
 class VertexConstantBuffer : public ConstantBuffer<C>
 {
 	using ConstantBuffer<C>::pConstantBuffer;
+	using ConstantBuffer<C>::slot;
 	using Bindable::GetContext;
 
 public:
@@ -68,7 +70,7 @@ public:
 
 	void Bind(Graphics& graphics) noexcept override
 	{
-		GetContext(graphics)->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
+		GetContext(graphics)->VSSetConstantBuffers(slot, 1u, pConstantBuffer.GetAddressOf());
 	}
 };
 
@@ -76,6 +78,7 @@ template<typename C>
 class PixelConstantBuffer : public ConstantBuffer<C>
 {
 	using ConstantBuffer<C>::pConstantBuffer;
+	using ConstantBuffer<C>::slot;
 	using Bindable::GetContext;
 
 public:
@@ -83,6 +86,6 @@ public:
 
 	void Bind(Graphics& graphics) noexcept override
 	{
-		GetContext(graphics)->PSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
+		GetContext(graphics)->PSSetConstantBuffers(slot, 1u, pConstantBuffer.GetAddressOf());
 	}
 };

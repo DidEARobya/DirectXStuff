@@ -61,6 +61,12 @@
     <Filter Include="Source Files\imgui">
       <UniqueIdentifier>{dee735e0-0992-4004-80d5-f7e8f39f43e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Graphics\Lighting">
+      <UniqueIdentifier>{894fc032-57b7-4038-b44b-54244512aa95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics\Lighting">
+      <UniqueIdentifier>{8b5c5bc9-9f4a-4b54-a1fc-f7afbf497d84}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Window.cpp">
@@ -129,9 +135,6 @@
     <ClCompile Include="Pyramid.cpp">
       <Filter>Source Files\Graphics\Drawable</Filter>
     </ClCompile>
-    <ClCompile Include="Melon.cpp">
-      <Filter>Source Files\Graphics\Drawable</Filter>
-    </ClCompile>
     <ClCompile Include="Surface.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -176,6 +179,15 @@
     </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="PointLight.cpp">
+      <Filter>Source Files\Graphics\Lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="SolidSphere.cpp">
+      <Filter>Source Files\Graphics\Drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="Cylinder.cpp">
+      <Filter>Source Files\Graphics\Drawable</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -281,9 +293,6 @@
     <ClInclude Include="Pyramid.h">
       <Filter>Header Files\Graphics\Drawable</Filter>
     </ClInclude>
-    <ClInclude Include="Melon.h">
-      <Filter>Header Files\Graphics\Drawable</Filter>
-    </ClInclude>
     <ClInclude Include="Surface.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -332,6 +341,18 @@
     <ClInclude Include="Camera.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="PointLight.h">
+      <Filter>Header Files\Graphics\Lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="SolidSphere.h">
+      <Filter>Header Files\Graphics\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseObject.h">
+      <Filter>Header Files\Graphics\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="Cylinder.h">
+      <Filter>Header Files\Graphics\Drawable</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DirectXStuff.rc">
@@ -372,6 +393,15 @@
       <Filter>Header Files\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="ColourIndexPS.hlsl">
+      <Filter>Header Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PhongVS.hlsl">
+      <Filter>Header Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PhongPS.hlsl">
+      <Filter>Header Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="IndexedPhongPS.hlsl">
       <Filter>Header Files\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

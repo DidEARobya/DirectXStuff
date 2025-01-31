@@ -21,6 +21,29 @@ public:
 			DirectX::XMStoreFloat3(&v.pos, DirectX::XMVector3Transform(pos, matrix));
 		}
 	}
+
+	void SetNormalsIndependentFlat() noexcept(!IS_DEBUG)
+	{
+		using namespace DirectX;
+		assert(_indices.size() % 3 == 0 && _indices.size() > 0);
+
+		for (size_t i = 0; i < _indices.size(); i += 3)
+		{
+			auto& v0 = _vertices[_indices[i]];
+			auto& v1 = _vertices[_indices[i + 1]];
+			auto& v2 = _vertices[_indices[i + 2]];
+
+			const XMVECTOR p0 = XMLoadFloat3(&v0.pos);
+			const XMVECTOR p1 = XMLoadFloat3(&v1.pos);
+			const XMVECTOR p2 = XMLoadFloat3(&v2.pos);
+
+			const XMVECTOR n = XMVector3Normalize(XMVector3Cross((p1 - p0), (p2 - p0)));
+
+			XMStoreFloat3(&v0.n, n);
+			XMStoreFloat3(&v1.n, n);
+			XMStoreFloat3(&v2.n, n);
+		}
+	}
 public:
 	std::vector<T> _vertices;
 	std::vector<unsigned short> _indices;

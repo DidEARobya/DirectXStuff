@@ -6,11 +6,17 @@
 class TransformCBuffer : public Bindable
 {
 public:
-	TransformCBuffer(Graphics& graphics, const Drawable& parent);
+	TransformCBuffer(Graphics& graphics, const Drawable& parent, UINT slot = 0);
 	void Bind(Graphics& graphics) noexcept override;
 
 private:
-	static std::unique_ptr<VertexConstantBuffer<DirectX::XMMATRIX>> _pvConstantBuffer;
+	struct Transforms
+	{
+		DirectX::XMMATRIX model;
+		DirectX::XMMATRIX modelViewProj;
+	};
+
+	static std::unique_ptr<VertexConstantBuffer<Transforms>> _pvConstantBuffer;
 	const Drawable& _parent;
 };
 

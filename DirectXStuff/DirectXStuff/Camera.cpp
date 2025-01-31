@@ -15,7 +15,7 @@ void Camera::SpawnControlWindow() noexcept
 	if (ImGui::Begin("Camera"))
 	{
 		ImGui::Text("Position");
-		ImGui::SliderFloat("R", &_r, 0.0f, 80.0f, "%.1f");
+		ImGui::SliderFloat("R", &_r, 0.1f, 90.0f, "%.1f");
 		ImGui::SliderAngle("Theta", &_theta, -180.0f, 180.0f);
 		ImGui::SliderAngle("Phi", &_phi, -89.0f, 89.0f);
 		ImGui::Text("Orientation");
